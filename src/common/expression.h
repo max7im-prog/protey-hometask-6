@@ -24,4 +24,6 @@ protected:
     float value;
     bool isLeaf;
     char operation;
+
+    static std::string stripBraces(const std::string &s);
 };

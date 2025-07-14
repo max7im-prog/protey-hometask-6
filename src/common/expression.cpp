@@ -4,32 +4,37 @@
 #include <stdexcept>
 #include <cctype>
 
-std::string stripBraces(const std::string& s) {
+std::string Expression::stripBraces(const std::string &s)
+{
     std::string ret = s;
 
-    while (!ret.empty() && ret.front() == '(' && ret.back() == ')') {
+    while (!ret.empty() && ret.front() == '(' && ret.back() == ')')
+    {
         int level = 0;
         bool valid = true;
 
-        for (size_t i = 0; i < ret.size(); ++i) {
-            if (ret[i] == '(') level++;
-            else if (ret[i] == ')') level--;
+        for (size_t i = 0; i < ret.size(); ++i)
+        {
+            if (ret[i] == '(')
+                level++;
+            else if (ret[i] == ')')
+                level--;
 
-            
-            if (level == 0 && i != ret.size() - 1) {
+            if (level == 0 && i != ret.size() - 1)
+            {
                 valid = false;
                 break;
             }
         }
 
-        if (!valid || level != 0) break;
+        if (!valid || level != 0)
+            break;
 
         ret = ret.substr(1, ret.size() - 2);
     }
 
     return ret;
 }
-
 
 float Expression::evaluate()
 {
