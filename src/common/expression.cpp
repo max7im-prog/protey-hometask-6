@@ -1,54 +1,35 @@
 #include "expression.h"
 #include <string>
+#include <vector>
 #include <stdexcept>
 #include <cctype>
 
-std::string stripBraces(const std::string &s)
-{
+std::string stripBraces(const std::string& s) {
     std::string ret = s;
-    bool canStrip = true;
-    while (canStrip)
-    {
-        if (ret.size() == 0)
-        {
-            canStrip = false;
-            break;
-        }
-        if (ret[0] != '(')
-        {
-            canStrip = false;
-            break;
-        }
-        if (ret[ret.size() - 1] != ')')
-        {
-            canStrip = false;
-            break;
-        }
-        int bracesLevel = 0;
-        for (size_t i = 0; i < ret.size(); i++)
-        {
-            if (ret[i] == '(')
-            {
-                bracesLevel++;
-            }
-            else if (ret[i] == ')')
-            {
-                bracesLevel--;
-                if (bracesLevel == 0 && i != ret.size() - 1)
-                {
-                    canStrip = false;
-                    break;
-                }
+
+    while (!ret.empty() && ret.front() == '(' && ret.back() == ')') {
+        int level = 0;
+        bool valid = true;
+
+        for (size_t i = 0; i < ret.size(); ++i) {
+            if (ret[i] == '(') level++;
+            else if (ret[i] == ')') level--;
+
+            
+            if (level == 0 && i != ret.size() - 1) {
+                valid = false;
+                break;
             }
         }
-        if (canStrip)
-        {
-            ret.erase(0, 1);
-            ret.erase(ret.size() - 1, 1);
-        }
+
+        if (!valid || level != 0) break;
+
+        ret = ret.substr(1, ret.size() - 2);
     }
+
     return ret;
 }
+
 
 float Expression::evaluate()
 {
@@ -76,7 +57,7 @@ float Expression::evaluate()
         ret = firstVal / secondVal;
         break;
     default:
-        throw std::runtime_error(this->operation + " is an unsupported operation");
+        throw std::runtime_error(std::to_string(this->operation) + " is an unsupported operation");
         break;
     }
     return ret;
@@ -108,13 +89,13 @@ Expression::Expression(std::string expr)
         throw std::runtime_error("expression can't be empty");
     }
     size_t bracesLevel = 0;
-    bool isLeaf = true;
     std::string curExpr = "";
     std::string firstExpr = "";
     std::string secondExpr = "";
-    bool foundFirst = false;
+    std::vector<std::string> expressions;
+    std::vector<char> operations;
     int i = 0;
-    for (; i < s.size() && !foundFirst; i++)
+    for (; i < s.size(); i++)
     {
         if (s[i] == '(')
         {
@@ -122,7 +103,6 @@ Expression::Expression(std::string expr)
             curExpr += s[i];
             if (i != 0)
             {
-                isLeaf = false;
             }
         }
         else if (s[i] == ')')
@@ -152,9 +132,9 @@ Expression::Expression(std::string expr)
                     if (curExpr.size() != 0)
                     {
                         firstExpr = curExpr;
-                        this->operation = s[i];
-                        foundFirst = true;
-                        isLeaf = false;
+                        expressions.push_back(curExpr);
+                        curExpr = "";
+                        operations.push_back(s[i]);
                     }
                     else
                     {
@@ -172,21 +152,54 @@ Expression::Expression(std::string expr)
             throw std::runtime_error("failed to parse \"" + s[i] + std::string("\""));
         }
     }
-    if (foundFirst)
+    expressions.push_back(curExpr);
+
+    std::vector<int> mulDivVector = {};
+    std::vector<int> subAddVector = {};
+
+    for (size_t i = 0; i < operations.size(); i++)
     {
-        this->isLeaf = false;
-        curExpr = "";
-        for (; i < s.size(); i++)
+        if (operations[i] == mul || operations[i] == dev)
         {
-            curExpr += s[i];
+            mulDivVector.push_back(i);
         }
-        secondExpr = curExpr;
-        this->first = std::make_shared<Expression>(firstExpr);
-        this->second = std::make_shared<Expression>(secondExpr);
+        else if (operations[i] == sub || operations[i] == add)
+        {
+            subAddVector.push_back(i);
+        }
     }
-    else if (isLeaf)
+    std::vector<int> operationOrder = subAddVector;
+    operationOrder.insert(operationOrder.end(), mulDivVector.begin(), mulDivVector.end());
+
+    if (expressions.size() == 1)
     {
         this->isLeaf = true;
-        this->value = std::stof(curExpr);
+        this->value = std::stof(stripBraces(expressions[0]));
+    }
+    else
+    {
+        size_t operNum = operationOrder[0];
+        this->operation = operations[operNum];
+        curExpr = "";
+        for (int i = 0; i < operations.size(); i++)
+        {
+            curExpr += expressions[i];
+            if (i == operNum)
+            {
+                firstExpr = curExpr;
+                curExpr = "";
+                this->operation = operations[operNum];
+            }
+            else
+            {
+                curExpr += operations[i];
+            }
+        }
+        curExpr += expressions.back();
+        secondExpr = curExpr;
+
+        this->isLeaf = false;
+        this->first = std::make_shared<Expression>(firstExpr);
+        this->second = std::make_shared<Expression>(secondExpr);
     }
 }
