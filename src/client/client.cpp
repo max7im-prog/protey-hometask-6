@@ -15,7 +15,7 @@
 
 std::string generateExpression(int n, std::mt19937 &rng)
 {
-    std::uniform_real_distribution<float> numDist(1, 100);
+    std::uniform_real_distribution<float> numDist(-100, 100);
     std::uniform_int_distribution<int> opDist(0, 3);
     std::string ops = "+-*/";
     std::string expr = "(" + std::to_string(numDist(rng)) + ")";
@@ -145,9 +145,9 @@ void runClient(int n, int connections, const std::string &addr, int port)
             try
             {
                 float result = std::stof(connStates[fd].received);
-                std::cout << "Expression: " << connStates[fd].expr << "\n";
-                std::cout << "Expected:   " << connStates[fd].expected << "\n";
-                std::cout << "Received:   " << result << "\n";
+                std::cout << "Expression: " << connStates[fd].expr << std::endl;
+                std::cout << "Expected:   " << connStates[fd].expected << std::endl;
+                std::cout << "Received:   " << result << std::endl;
 
                 if (std::abs(result - connStates[fd].expected) > 1e-3)
                 {
