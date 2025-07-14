@@ -141,7 +141,6 @@ void runClient(int n, int connections, const std::string &addr, int port)
             buf[bytes] = '\0';
             connStates[fd].received += std::string(buf);
 
-            // Assume one full response per socket
             try
             {
                 float result = std::stof(connStates[fd].received);
@@ -159,7 +158,6 @@ void runClient(int n, int connections, const std::string &addr, int port)
             }
             catch (...)
             {
-                // Not yet a valid float? Wait for more data
             }
         }
     }
