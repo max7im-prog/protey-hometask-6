@@ -3,6 +3,53 @@
 #include <stdexcept>
 #include <cctype>
 
+std::string stripBraces(const std::string &s)
+{
+    std::string ret = s;
+    bool canStrip = true;
+    while (canStrip)
+    {
+        if (ret.size() == 0)
+        {
+            canStrip = false;
+            break;
+        }
+        if (ret[0] != '(')
+        {
+            canStrip = false;
+            break;
+        }
+        if (ret[ret.size() - 1] != ')')
+        {
+            canStrip = false;
+            break;
+        }
+        int bracesLevel = 0;
+        for (size_t i = 0; i < ret.size(); i++)
+        {
+            if (ret[i] == '(')
+            {
+                bracesLevel++;
+            }
+            else if (ret[i] == ')')
+            {
+                bracesLevel--;
+                if (bracesLevel == 0 && i != ret.size() - 1)
+                {
+                    canStrip = false;
+                    break;
+                }
+            }
+        }
+        if (canStrip)
+        {
+            ret.erase(0, 1);
+            ret.erase(ret.size() - 1, 1);
+        }
+    }
+    return ret;
+}
+
 float Expression::evaluate()
 {
     float ret = 0;
@@ -53,8 +100,9 @@ std::string Expression::toString()
     return ret;
 }
 
-Expression::Expression(std::string s)
+Expression::Expression(std::string expr)
 {
+    std::string s = stripBraces(expr);
     if (s.size() == 0)
     {
         throw std::runtime_error("expression can't be empty");
@@ -70,24 +118,22 @@ Expression::Expression(std::string s)
     {
         if (s[i] == '(')
         {
+            bracesLevel++;
+            curExpr += s[i];
             if (i != 0)
             {
-                bracesLevel++;
-                curExpr += s[i];
                 isLeaf = false;
             }
         }
         else if (s[i] == ')')
         {
-            if (i != s.size() - 1)
+
+            if (bracesLevel <= 0)
             {
-                if (bracesLevel <= 0)
-                {
-                    throw std::runtime_error("closing brace without an opening brace");
-                }
-                bracesLevel--;
-                curExpr += s[i];
+                throw std::runtime_error("closing brace without an opening brace");
             }
+            bracesLevel--;
+            curExpr += s[i];
         }
         else if (std::isdigit(s[i]) || s[i] == '.')
         {
@@ -101,16 +147,23 @@ Expression::Expression(std::string s)
             }
             else
             {
-                if (curExpr.size() != 0)
+                if (bracesLevel == 0)
                 {
-                    firstExpr = curExpr;
-                    this->operation = s[i];
-                    foundFirst = true;
-                    isLeaf = false;
+                    if (curExpr.size() != 0)
+                    {
+                        firstExpr = curExpr;
+                        this->operation = s[i];
+                        foundFirst = true;
+                        isLeaf = false;
+                    }
+                    else
+                    {
+                        throw std::runtime_error("operation without a first operand: \"" + s[i] + std::string("\""));
+                    }
                 }
                 else
                 {
-                    throw std::runtime_error("operation without a first operand: \"" + s[i] + std::string("\""));
+                    curExpr += s[i];
                 }
             }
         }
