@@ -162,7 +162,7 @@ Expression::Expression(std::string expr)
     std::vector<int> mulDivVector = {};
     std::vector<int> subAddVector = {};
 
-    for (size_t i = 0; i < operations.size(); i++)
+    for (int i = operations.size()-1; i >=0; i--)
     {
         if (operations[i] == mul || operations[i] == dev)
         {

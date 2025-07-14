@@ -15,7 +15,7 @@
 
 std::string generateExpression(int n, std::mt19937 &rng)
 {
-    std::uniform_real_distribution<float> numDist(-100, 100);
+    std::uniform_real_distribution<float> numDist(1, 100);
     std::uniform_int_distribution<int> opDist(0, 3);
     std::string ops = "+-*/";
     std::string expr = "(" + std::to_string(numDist(rng)) + ")";
