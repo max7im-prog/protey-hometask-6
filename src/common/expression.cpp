@@ -122,7 +122,8 @@ Expression::Expression(std::string s)
     if (foundFirst)
     {
         this->isLeaf = false;
-        for (; i < s.size() && !foundFirst; i++)
+        curExpr = "";
+        for (; i < s.size(); i++)
         {
             curExpr += s[i];
         }
